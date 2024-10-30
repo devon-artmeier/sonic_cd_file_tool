@@ -113,11 +113,11 @@ bool StringStartsWith(const std::string& str, const std::string& prefix)
 
 unsigned long CalcCrc32(unsigned char* data, const size_t data_size)
 {
-	unsigned long crc = 0xFFFFFFFF;
+	unsigned long long crc = 0xFFFFFFFF;
 	for (size_t i = 0; i < data_size; i++) {
 		crc = crc32_table[data[i] ^ (crc & 0xFF)] ^ (crc >> 8);
 	}
-	return (~crc) & 0xFFFFFFFF;
+	return ~crc;
 }
 
 void ReadFileData(const std::string& file_path, unsigned char*& file_data, size_t& file_size)

@@ -88,7 +88,6 @@ void ProcessFiles(const std::string& ip, const std::string& sp, const unsigned l
 								patch_file.read(reinterpret_cast<char*>(file_data + patch.address), patch_size);
 							}
 						}
-						break;
 					}
 				}
 				unsigned long crc32_patched = CalcCrc32(file_data, file_size);
