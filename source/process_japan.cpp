@@ -150,7 +150,7 @@ static const FileHash file_hashes[] = {
 	{ "WARP__.MMD",   0xF1293A31 }
 };
 
-void ProcessFilesJapan(const std::string& ip, const std::string& sp, const std::string& folder)
+void ProcessFilesJapan(const std::string& ip, const std::string& sp, const std::string& patches, const std::string& folder)
 {
-	ProcessFiles(ip, sp, 0x569920BD, 0xC2051A81, folder, "patches/japan", file_hashes, sizeof(file_hashes) / sizeof(FileHash));
+	ProcessFiles(ip, sp, 0x569920BD, 0xC2051A81, folder, patches + "/japan", file_hashes, sizeof(file_hashes) / sizeof(FileHash));
 }

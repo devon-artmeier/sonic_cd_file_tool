@@ -19,10 +19,6 @@
 void ProcessFiles(const std::string& ip, const std::string& sp, const unsigned long ip_crc32, const unsigned long sp_crc32, const std::string& folder,
                   const std::string& patches_path, const FileHash* file_hashes, const size_t file_hash_count)
 {
-	if (!std::filesystem::exists(patches_path)) {
-		throw std::runtime_error("Folder \"" + patches_path + "\" does not exist.");
-	}
-
 	unsigned char* file_data = nullptr;
 	size_t         file_size = 0;
 
@@ -39,25 +35,31 @@ void ProcessFiles(const std::string& ip, const std::string& sp, const unsigned l
 	delete[] file_data;
 
 	Patches patches;
-	for (const auto& patch_entry : std::filesystem::directory_iterator(patches_path)) {
-		std::string patch_file = patch_entry.path().filename().string();
+
+	
+	if (!std::filesystem::exists(patches_path)) {
+		std::cout << "\"" + patches_path + "\" does not exist." << std::endl;
+	} else {
+		for (const auto& patch_entry : std::filesystem::directory_iterator(patches_path)) {
+			std::string patch_file = patch_entry.path().filename().string();
 		
-		for (const auto& file_entry : std::filesystem::directory_iterator(folder)) {
-			std::string file_name   = file_entry.path().filename().string();
-			size_t      name_length = file_name.length();
+			for (const auto& file_entry : std::filesystem::directory_iterator(folder)) {
+				std::string file_name   = file_entry.path().filename().string();
+				size_t      name_length = file_name.length();
 
-			if (StringStartsWith(patch_file, file_name) && patch_file.length() > name_length && patch_file[name_length] == '.') {
-				std::string patch_address = patch_file.substr(++name_length);
-				size_t      separator     = patch_address.find('.', name_length);
-				if (separator != std::string::npos) {
-					patch_address = patch_address.substr(separator + 1);
-				}
+				if (StringStartsWith(patch_file, file_name) && patch_file.length() > name_length && patch_file[name_length] == '.') {
+					std::string patch_address = patch_file.substr(++name_length);
+					size_t      separator     = patch_address.find('.', name_length);
+					if (separator != std::string::npos) {
+						patch_address = patch_address.substr(separator + 1);
+					}
 
-				Patch patch = { patches_path + "/" + patch_file, std::stoull(patch_address, nullptr, 16) };
-				if (patches.find(file_name) != patches.end()) {
-					patches[file_name].push_back(patch);
-				} else {
-					patches[file_name] = { patch };
+					Patch patch = { patches_path + "/" + patch_file, std::stoull(patch_address, nullptr, 16) };
+					if (patches.find(file_name) != patches.end()) {
+						patches[file_name].push_back(patch);
+					} else {
+						patches[file_name] = { patch };
+					}
 				}
 			}
 		}

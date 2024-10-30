@@ -25,8 +25,8 @@ struct FileHash
 
 struct Patch
 {
-	std::string file;
-	size_t      address;
+	std::string        file;
+	unsigned long long address;
 };
 
 typedef std::unordered_map<std::string, std::vector<Patch>> Patches;
@@ -34,8 +34,8 @@ typedef std::unordered_map<std::string, unsigned char*>     FileData;
 
 extern void ProcessFiles      (const std::string& ip, const std::string& sp, const unsigned long ip_crc32, const unsigned long sp_crc32, const std::string& folder,
                                const std::string& patches_path, const FileHash* file_hashes, const size_t file_hash_count);
-extern void ProcessFilesJapan (const std::string& ip, const std::string& sp, const std::string& folder);
-extern void ProcessFilesUsa   (const std::string& ip, const std::string& sp, const std::string& folder);
-extern void ProcessFilesEurope(const std::string& ip, const std::string& sp, const std::string& folder);
+extern void ProcessFilesJapan (const std::string& ip, const std::string& sp, const std::string& patches, const std::string& folder);
+extern void ProcessFilesUsa   (const std::string& ip, const std::string& sp, const std::string& patches, const std::string& folder);
+extern void ProcessFilesEurope(const std::string& ip, const std::string& sp, const std::string& patches, const std::string& folder);
 
 #endif // PATCH_HPP

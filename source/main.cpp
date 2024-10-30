@@ -19,11 +19,12 @@
 int main(int argc, char* argv[])
 {
 	if (argc < 2) {
-		std::cout << "Usage: sonic_cd_file_tool -r [region] -i [ip] -s [sp] [folder]" << std::endl << std::endl <<
-		             "           -r [region] - Region setting (Japan/USA/Europe)" << std::endl <<
-		             "           -i [ip]     - Initial program file" << std::endl <<
-		             "           -s [sp]     - System program file" << std::endl <<
-		             "           [folder]    - Folder to scan" << std::endl << std::endl;
+		std::cout << "Usage: sonic_cd_file_tool -r [region] -i [ip] -s [sp] -p [patches] [folder]" << std::endl << std::endl <<
+		             "           -r [region]  - Region setting (Japan/USA/Europe)" << std::endl <<
+		             "           -i [ip]      - Initial program file" << std::endl <<
+		             "           -s [sp]      - System program file" << std::endl <<
+		             "           -p [patches] - Patches folder" << std::endl <<
+		             "           [folder]     - Folder to scan" << std::endl << std::endl;
 		return -1;
 	}
 
@@ -31,8 +32,8 @@ int main(int argc, char* argv[])
 		std::string region;
 		std::string ip;
 		std::string sp;
+		std::string patches;
 		std::string folder;
-		Patches     patches;
 
 		for (int i = 1; i < argc; i++) {
 			if (CheckArgument(argc, argv, i, "r")) {
@@ -59,6 +60,14 @@ int main(int argc, char* argv[])
 				continue;
 			}
 
+			if (CheckArgument(argc, argv, i, "p")) {
+				if (!patches.empty()) {
+					throw std::runtime_error("Patches folder already defined.");
+				}
+				patches = argv[i];
+				continue;
+			}
+
 			if (!folder.empty()) {
 				throw std::runtime_error("Folder already defined.");
 			}
@@ -71,8 +80,11 @@ int main(int argc, char* argv[])
 		if (sp.empty()) {
 			throw std::runtime_error("System program file not defined.");
 		}
+		if (patches.empty()) {
+			throw std::runtime_error("Patches folder not defined.");
+		}
 		if (folder.empty()) {
-			throw std::runtime_error("Folder not defined.");
+			throw std::runtime_error("Scan folder not defined.");
 		}
 
 		if (!std::filesystem::exists(ip)) {
@@ -81,6 +93,9 @@ int main(int argc, char* argv[])
 		if (!std::filesystem::exists(sp)) {
 			throw std::runtime_error(("\"" + sp + "\" does not exist.").c_str());
 		}
+		if (!std::filesystem::exists(patches)) {
+			throw std::runtime_error(("\"" + patches + "\" does not exist.").c_str());
+		}
 		if (!std::filesystem::exists(folder)) {
 			throw std::runtime_error(("\"" + folder + "\" does not exist.").c_str());
 		}
@@ -88,11 +103,11 @@ int main(int argc, char* argv[])
 		if (region.empty()) {
 			throw std::runtime_error("Region setting not defined.");
 		} else if (StringToLower(region).compare("japan") == 0) {
-			ProcessFilesJapan(ip, sp, folder);
+			ProcessFilesJapan(ip, sp, patches, folder);
 		} else if (StringToLower(region).compare("usa") == 0) {
-			ProcessFilesUsa(ip, sp, folder);
+			ProcessFilesUsa(ip, sp, patches, folder);
 		} else if (StringToLower(region).compare("europe") == 0) {
-			ProcessFilesEurope(ip, sp, folder);
+			ProcessFilesEurope(ip, sp, patches, folder);
 		} else {
 			throw std::runtime_error(("Invalid region setting \"" + region + "\".").c_str());
 		}
