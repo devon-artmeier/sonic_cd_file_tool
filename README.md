@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/devon-artmeier/sonic_cd_file_tool/actions/workflows/cmake-multi-platform.yml/badge.svg)](https://github.com/devon-artmeier/sonic_cd_file_tool/actions/workflows/cmake-multi-platform.yml)
 
-This is a tool to check and patch files for the Sonic CD disassembly.
+This is a tool to check and patch files for the Sonic CD disassembly to ensure bit-perfectness.
 
 ## Usage
 
