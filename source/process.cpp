@@ -41,24 +41,28 @@ void ProcessFiles(const std::string& ip, const std::string& sp, const unsigned l
 		std::cout << "\"" + patches_path + "\" does not exist." << std::endl;
 	} else {
 		for (const auto& patch_entry : std::filesystem::directory_iterator(patches_path)) {
-			std::string patch_file = patch_entry.path().filename().string();
+			if (!patch_entry.is_directory()) {
+				std::string patch_file = patch_entry.path().filename().string();
 		
-			for (const auto& file_entry : std::filesystem::directory_iterator(folder)) {
-				std::string file_name   = file_entry.path().filename().string();
-				size_t      name_length = file_name.length();
+				for (const auto& file_entry : std::filesystem::directory_iterator(folder)) {
+					if (!file_entry.is_directory()) {
+						std::string file_name   = file_entry.path().filename().string();
+						size_t      name_length = file_name.length();
 
-				if (StringStartsWith(patch_file, file_name) && patch_file.length() > name_length && patch_file[name_length] == '.') {
-					std::string patch_address = patch_file.substr(++name_length);
-					size_t      separator     = patch_address.find('.', name_length);
-					if (separator != std::string::npos) {
-						patch_address = patch_address.substr(separator + 1);
-					}
+						if (StringStartsWith(patch_file, file_name) && patch_file.length() > name_length && patch_file[name_length] == '.') {
+							std::string patch_address = patch_file.substr(++name_length);
+							size_t      separator     = patch_address.find('.', name_length);
+							if (separator != std::string::npos) {
+								patch_address = patch_address.substr(separator + 1);
+							}
 
-					Patch patch = { patches_path + "/" + patch_file, std::stoull(patch_address, nullptr, 16) };
-					if (patches.find(file_name) != patches.end()) {
-						patches[file_name].push_back(patch);
-					} else {
-						patches[file_name] = { patch };
+							Patch patch = { patches_path + "/" + patch_file, std::stoull(patch_address, nullptr, 16) };
+							if (patches.find(file_name) != patches.end()) {
+								patches[file_name].push_back(patch);
+							} else {
+								patches[file_name] = { patch };
+							}
+						}
 					}
 				}
 			}
@@ -66,51 +70,53 @@ void ProcessFiles(const std::string& ip, const std::string& sp, const unsigned l
 	}
 
 	for (const auto& file_entry : std::filesystem::directory_iterator(folder)) {
-		std::string file_name = file_entry.path().filename().string();
-		ReadFileData(file_entry.path().string(), file_data, file_size);
+		if (!file_entry.is_directory()) {
+			std::string file_name = file_entry.path().filename().string();
+			ReadFileData(file_entry.path().string(), file_data, file_size);
 
-		bool found = false;
-		for (int i = 0; i < file_hash_count; i++) {
-			if (file_name.compare(file_hashes[i].file) == 0) {
-				unsigned long crc32 = CalcCrc32(file_data, file_size);
-				found = true;
+			bool found = false;
+			for (int i = 0; i < file_hash_count; i++) {
+				if (file_name.compare(file_hashes[i].file) == 0) {
+					unsigned long crc32 = CalcCrc32(file_data, file_size);
+					found = true;
 
-				for (const auto& file_patch : patches) {
-					if (file_patch.first.compare(file_name) == 0) {
-						for (const auto& patch : file_patch.second) {
-							std::ifstream patch_file(patch.file, std::ios::in | std::ios::binary);
+					for (const auto& file_patch : patches) {
+						if (file_patch.first.compare(file_name) == 0) {
+							for (const auto& patch : file_patch.second) {
+								std::ifstream patch_file(patch.file, std::ios::in | std::ios::binary);
 
-							patch_file.seekg(0, std::ios_base::end);
-							size_t patch_size = patch_file.tellg();
-							patch_file.seekg(0, std::ios_base::beg);
+								patch_file.seekg(0, std::ios_base::end);
+								size_t patch_size = patch_file.tellg();
+								patch_file.seekg(0, std::ios_base::beg);
 
-							if (patch_size <= file_size - patch.address) {
-								patch_file.read(reinterpret_cast<char*>(file_data + patch.address), patch_size);
+								if (patch_size <= file_size - patch.address) {
+									patch_file.read(reinterpret_cast<char*>(file_data + patch.address), patch_size);
+								}
 							}
+							break;
 						}
-						break;
 					}
-				}
-				unsigned long crc32_patched = CalcCrc32(file_data, file_size);
+					unsigned long crc32_patched = CalcCrc32(file_data, file_size);
 
-				if (crc32_patched != file_hashes[i].crc32) {
-					std::cout << "\"" << file_name << "\" has differences." << std::endl;
-				} else if (crc32 != crc32_patched) {
-					std::ofstream file_write(file_entry.path().string(), std::ios::out | std::ios::binary);
-					if (!file_write.is_open()) {
-						std::cout << "Failed to open \"" << file_entry.path().string() << "\" for writing." << std::endl;
-					} else {
-						file_write.write(reinterpret_cast<char*>(file_data), file_size);
-						std::cout << "Patched \"" << file_name << "\"." << std::endl;
+					if (crc32_patched != file_hashes[i].crc32) {
+						std::cout << "\"" << file_name << "\" has differences." << std::endl;
+					} else if (crc32 != crc32_patched) {
+						std::ofstream file_write(file_entry.path().string(), std::ios::out | std::ios::binary);
+						if (!file_write.is_open()) {
+							std::cout << "Failed to open \"" << file_entry.path().string() << "\" for writing." << std::endl;
+						} else {
+							file_write.write(reinterpret_cast<char*>(file_data), file_size);
+							std::cout << "Patched \"" << file_name << "\"." << std::endl;
+						}
 					}
+					break;
 				}
-				break;
 			}
-		}
 
-		if (!found) {
-			std::cout << "\"" << file_name << "\" is not from Sonic CD." << std::endl;
+			if (!found) {
+				std::cout << "\"" << file_name << "\" is not from Sonic CD." << std::endl;
+			}
+			delete[] file_data;
 		}
-		delete[] file_data;
 	}
 }
